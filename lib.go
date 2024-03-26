@@ -2,6 +2,7 @@ package gluamsgpack
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"time"
 	"unicode/utf8"
@@ -30,7 +31,7 @@ type Time64 time.Time
 type Time96 time.Time
 type Time time.Time
 type Ext struct {
-	x    Signed
+	x    int8
 	data string
 }
 
@@ -107,7 +108,7 @@ func newTime96(ls *lua.LState) Time96 {
 
 func newExt(ls *lua.LState) Ext {
 	return Ext{
-		x:    Signed(int64(ls.CheckNumber(1))),
+		x:    int8(ls.CheckNumber(1)),
 		data: string(ls.CheckString(2)),
 	}
 }
@@ -263,7 +264,7 @@ func (x Ext) PackMsg(buf []byte) []byte {
 		buf = append(buf, 0xc9)
 		buf = Unsigned(l).PackMsg(buf)
 	}
-	return append(x.x.PackMsg(buf), x.data...)
+	return append(append(buf, byte(x.x)), x.data...)
 }
 
 func MsgEncode(ls *lua.LState) int {
@@ -349,7 +350,7 @@ func lmEncode(
 		case time.Time:
 			return Time(ud).PackMsg(buf)
 		default:
-			ls.RaiseError("UserData lacks Packer implementation")
+			ls.RaiseError(fmt.Sprintf("UserData(%T) cannot encode to msgpack", ud))
 			return buf
 		}
 	default:
