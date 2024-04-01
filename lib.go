@@ -289,6 +289,18 @@ func lmEncode(
 	buf []byte,
 	dupe map[*lua.LTable]struct{},
 ) []byte {
+	for {
+		if fn, ok := ls.GetMetaField(value, "__msgpack").(*lua.LFunction); ok {
+			top := ls.GetTop()
+			ls.Push(fn)
+			ls.Push(value)
+			ls.Call(1, 1)
+			value = ls.Get(-1)
+			ls.SetTop(top)
+		} else {
+			break
+		}
+	}
 	switch v := value.(type) {
 	case *lua.LNilType:
 		return append(buf, 0xc0)
@@ -320,25 +332,22 @@ func lmEncode(
 			return lmEncodeArray(ls, v, vlen, buf, dupe)
 		}
 	case *lua.LUserData:
-		if mt, ok := v.Metatable.(*lua.LTable); ok {
-			if fn, ok := mt.RawGetString("__msgpack").(*lua.LFunction); ok {
-				top := ls.GetTop()
-				ls.Push(fn)
-				ls.Push(value)
-				ls.Call(1, 1)
-				val := ls.Get(-1)
-				ls.SetTop(top)
-				return lmEncode(ls, val, buf, dupe)
-			}
-		}
 		switch ud := v.Value.(type) {
 		case Packer:
 			return ud.PackMsg(buf)
 		case Array:
-			vlen := ls.ObjLen(v)
-			return lmEncodeArray(ls, (*lua.LTable)(ud), vlen, buf, dupe)
+			if ud == nil {
+				return append(buf, 0xc0)
+			} else {
+				vlen := ls.ObjLen(v)
+				return lmEncodeArray(ls, (*lua.LTable)(ud), vlen, buf, dupe)
+			}
 		case Map:
-			return lmEncodeMap(ls, (*lua.LTable)(ud), buf, dupe)
+			if ud == nil {
+				return append(buf, 0xc0)
+			} else {
+				return lmEncodeMap(ls, (*lua.LTable)(ud), buf, dupe)
+			}
 		case string:
 			return Str(ud).PackMsg(buf)
 		case []byte:

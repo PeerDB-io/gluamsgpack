@@ -20,6 +20,11 @@ local timecode = mp.encode(time)
 assert(#timecode == 10)
 assert(string.byte(timecode, 1), 0xd6)
 assert(string.byte(timecode, 2), 0xff)
+assert(mp.encode(mp.array(nil)) == string.char(0xc0))
+local t1 = setmetatable({}, {__msgpack = function() return 1 end})
+assert(mp.encode(t1) == string.char(0x1))
+local t2 = setmetatable({}, {__msgpack = function() return t1 end})
+assert(mp.encode(t2) == string.char(0x1))
 `
 
 func Test(t *testing.T) {
