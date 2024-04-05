@@ -353,9 +353,9 @@ func lmEncode(
 		case []byte:
 			return Bin(unsafe.String(unsafe.SliceData(ud), len(ud))).PackMsg(buf)
 		case uint64:
-			return Signed(ud).PackMsg(buf)
-		case int64:
 			return Unsigned(ud).PackMsg(buf)
+		case int64:
+			return Signed(ud).PackMsg(buf)
 		case time.Time:
 			return Time(ud).PackMsg(buf)
 		default:
