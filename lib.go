@@ -134,8 +134,7 @@ func (s Str) PackMsg(buf []byte) []byte {
 	case l < 32:
 		buf = append(buf, 0xa0|byte(l))
 	case l < 0x100:
-		buf = append(buf, 0xd9)
-		buf = append(buf, byte(l))
+		buf = append(buf, 0xd9, byte(l))
 	case l < 0x10000:
 		buf = append(buf, 0xda)
 		buf = be.AppendUint16(buf, uint16(l))
@@ -167,8 +166,7 @@ func (i Signed) PackMsg(buf []byte) []byte {
 	case i > -32 && i < 0x80:
 		return append(buf, byte(i))
 	case i >= math.MinInt8 && i <= math.MaxInt8:
-		buf = append(buf, 0xd0)
-		return append(buf, byte(int8(i)))
+		return append(buf, 0xd0, byte(int8(i)))
 	case i >= math.MinInt16 && i <= math.MaxInt16:
 		buf = append(buf, 0xd1)
 		return be.AppendUint16(buf, uint16(i))
@@ -269,9 +267,8 @@ func (x Ext) PackMsg(buf []byte) []byte {
 
 func MsgEncode(ls *lua.LState) int {
 	dupe := make(map[*lua.LTable]struct{})
-	v := ls.Get(1)
-	buf := lmEncode(ls, v, nil, dupe)
-	ls.Push(lua.LString(buf))
+	buf := lmEncode(ls, ls.Get(1), nil, dupe)
+	ls.Push(lua.LString(unsafe.String(unsafe.SliceData(buf), len(buf))))
 	return 1
 }
 
