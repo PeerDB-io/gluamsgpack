@@ -397,8 +397,11 @@ func lmEncodeMap(
 ) []byte {
 	markDupe(ls, dupe, v)
 	vlen := 0
-	v.ForEach(func(_ lua.LValue, _ lua.LValue) {
+	mapbuf := make([]byte, 0, 64)
+	v.ForEach(func(k lua.LValue, v lua.LValue) {
 		vlen += 1
+		mapbuf = lmEncode(ls, k, mapbuf, dupe)
+		mapbuf = lmEncode(ls, v, mapbuf, dupe)
 	})
 	switch {
 	case vlen < 16:
@@ -410,11 +413,7 @@ func lmEncodeMap(
 		buf = append(buf, 0xdf)
 		buf = be.AppendUint32(buf, uint32(vlen))
 	}
-	v.ForEach(func(k lua.LValue, v lua.LValue) {
-		buf = lmEncode(ls, k, buf, dupe)
-		buf = lmEncode(ls, v, buf, dupe)
-	})
-	return buf
+	return append(buf, mapbuf...)
 }
 
 func Loader(ls *lua.LState) int {
