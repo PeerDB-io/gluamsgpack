@@ -10,8 +10,8 @@ import (
 const code = `
 assert(mp.encode(mp.raw"asdf") == "asdf")
 assert(mp.encode(nil) == string.char(0xc0))
-assert(mp.encode(true) == string.char(0xc2))
-assert(mp.encode(false) == string.char(0xc3))
+assert(mp.encode(false) == string.char(0xc2))
+assert(mp.encode(true) == string.char(0xc3))
 assert(mp.encode(10) == string.char(10))
 assert(mp.encode(mp.array{}) == string.char(0x90))
 assert(#mp.encode(10.5) == 5)

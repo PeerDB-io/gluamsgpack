@@ -303,9 +303,9 @@ func lmEncode(
 		return append(buf, 0xc0)
 	case lua.LBool:
 		if v {
-			return append(buf, 0xc2)
-		} else {
 			return append(buf, 0xc3)
+		} else {
+			return append(buf, 0xc2)
 		}
 	case lua.LNumber:
 		if v == lua.LNumber(int64(v)) {
